@@ -21,6 +21,7 @@ bool buttonStateLeft = false;
 bool buttonStateUp = false;
 bool buttonStateDown = false;
 bool HMIBesturing = false;
+bool noodStop = true;
 String HMIstuur;
 String laatstestring = "";
 
@@ -78,8 +79,9 @@ void bewegen() {
 }
 
 void HMIBewegen(String kant) {
-  HMIBesturing = true;
+  
   if(kant == "left"){
+    HMIBesturing = true;
     if(laatstestring == "left"){
       analogWrite(powerPinX, 0);
       laatstestring = "";
@@ -88,6 +90,7 @@ void HMIBewegen(String kant) {
       rechts();
     }
   }else if(kant == "right"){
+    HMIBesturing = true;
     if(laatstestring == "right"){
       analogWrite(powerPinX, 0);
       laatstestring = "";
@@ -96,6 +99,7 @@ void HMIBewegen(String kant) {
       links();
     }
   }else if(kant == "up"){
+    HMIBesturing = true;
     if(laatstestring == "up"){
       analogWrite(powerPinY, 0);
       laatstestring = "";
@@ -104,6 +108,7 @@ void HMIBewegen(String kant) {
       omhoog();
     }
   }else if(kant == "down"){
+    HMIBesturing = true;
     if(laatstestring == "down"){
       analogWrite(powerPinY, 0);
       laatstestring = "";
@@ -141,50 +146,73 @@ void receiveEvent(int howMany) {
     char c = Wire.read();
     receivedString += c;
   }
+  if (receivedString == "stil") {
+    Serial.println("niggaaa45678");
+    if(!noodStop){
+      noodStop = true;
+    } else {
+      noodStop = false;
+    }
+  //   noodStop = !noodStop;  
+  //   Serial.println(noodStop);
+  } else {
+    HMIBewegen(receivedString);
+  }
   // HMIstuur = receivedString;
   // HMIBesturing = true;
-  HMIBewegen(receivedString);
+  
+
 }
 
 void rechts() {
-  if (!buttonStateLeft) {
-    digitalWrite(directionPinX, LOW);
-    analogWrite(powerPinX, 255);
-  } else {
-    HMIBesturing = false;
-    digitalWrite(startpuntx, HIGH);
-    analogWrite(powerPinX, 0);
+  if(!noodStop){
+    Serial.println("niggaaa2");
+    if (!buttonStateLeft) {
+      digitalWrite(directionPinX, LOW);
+      analogWrite(powerPinX, 255);
+    } else {
+      HMIBesturing = false;
+      digitalWrite(startpuntx, HIGH);
+      analogWrite(powerPinX, 0);
+    }
+  }else{
+    Serial.println("niggaaa");
   }
 }
 
 void links() {
-  if (!buttonStateRight) {
-    digitalWrite(directionPinX, HIGH);
-    analogWrite(powerPinX, 255);
-  } else {
-    HMIBesturing = false;
-    digitalWrite(directionPinX, HIGH);
-    analogWrite(powerPinX, 0);
+  if(!noodStop){
+    if (!buttonStateRight) {
+      digitalWrite(directionPinX, HIGH);
+      analogWrite(powerPinX, 255);
+    } else {
+      HMIBesturing = false;
+      digitalWrite(directionPinX, HIGH);
+      analogWrite(powerPinX, 0);
+    }
   }
 }
 
 void omhoog() {
-  if (!buttonStateUp) {
-    digitalWrite(directionPinY, LOW);
-    analogWrite(powerPinY, 255);
-  } else {
-    HMIBesturing = false;
-    analogWrite(powerPinY, 0);
+  if(!noodStop){
+    if (!buttonStateUp) {
+      digitalWrite(directionPinY, LOW);
+      analogWrite(powerPinY, 255);
+    } else {
+      HMIBesturing = false;
+      analogWrite(powerPinY, 0);
+    }
   }
 }
 
 void omlaag() {
-  if (!buttonStateDown) {
-    digitalWrite(directionPinY, HIGH);
-    analogWrite(powerPinY, 255);
-  } else {
-    digitalWrite(startpunty, HIGH);
-    HMIBesturing = false;
-    analogWrite(powerPinY, 0);
+  if(!noodStop){
+    if (!buttonStateDown) {
+      digitalWrite(directionPinY, HIGH);
+      analogWrite(powerPinY, 255);
+    } else {
+      HMIBesturing = false;
+      analogWrite(powerPinY, 0);
+    }
   }
 }
