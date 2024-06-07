@@ -164,7 +164,7 @@ void buttonToggleState() {
       Serial.println("1");
     } else {
       Serial.println("0");
-      stuurbericht("stil");
+      //stuurbericht("stil");
     }
   }
   lastButtonState = buttonState;

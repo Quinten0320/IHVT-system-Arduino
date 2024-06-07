@@ -78,8 +78,8 @@ void bewegen() {
 }
 
 void HMIBewegen(String kant) {
-  HMIBesturing = true;
   if(kant == "left"){
+    HMIBesturing = true;
     if(laatstestring == "left"){
       analogWrite(powerPinX, 0);
       laatstestring = "";
@@ -88,6 +88,7 @@ void HMIBewegen(String kant) {
       rechts();
     }
   }else if(kant == "right"){
+    HMIBesturing = true;
     if(laatstestring == "right"){
       analogWrite(powerPinX, 0);
       laatstestring = "";
@@ -96,6 +97,7 @@ void HMIBewegen(String kant) {
       links();
     }
   }else if(kant == "up"){
+    HMIBesturing = true;
     if(laatstestring == "up"){
       analogWrite(powerPinY, 0);
       laatstestring = "";
@@ -104,6 +106,7 @@ void HMIBewegen(String kant) {
       omhoog();
     }
   }else if(kant == "down"){
+    HMIBesturing = true;
     if(laatstestring == "down"){
       analogWrite(powerPinY, 0);
       laatstestring = "";
