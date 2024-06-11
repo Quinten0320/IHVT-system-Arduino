@@ -70,9 +70,12 @@ void loop() {
       HMIdoorstuur = Serial.readStringUntil('\n');
       if (HMIdoorstuur == "fork") {
         knopingedrukt();
+      } else if (HMIdoorstuur.startsWith("coordinates")) {
+        ontvangenCoordinates(HMIdoorstuur);
       } else {
         stuurbericht(HMIdoorstuur);
       }
+
     }
 
     while ((millis() - positiedoorstuur) > 250) {
@@ -181,6 +184,17 @@ void readEncoderx() {
   } else {
     posx--;
   }
+}
+
+void ontvangenCoordinates(String input) {
+  int commaIndex1 = input.indexOf(',');
+  int commaIndex2 = input.indexOf(',', commaIndex1 + 1);
+  if (commaIndex1 != -1 && commaIndex2 != -1) {
+    int x = input.substring(commaIndex1 + 1, commaIndex2).toInt();
+    int y = input.substring(commaIndex2 + 1).toInt();
+    Serial.print("x: "); Serial.println(x);
+    Serial.print("y: "); Serial.println(y);
+  } 
 }
 
 void stuurbericht(String bericht) {
