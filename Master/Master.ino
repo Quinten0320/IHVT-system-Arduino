@@ -9,6 +9,7 @@
 #define buttonPin 4
 
 int joystickButton = 10;
+unsigned long delay1 = 0;
 int pwrPinFork = 11;
 int directionPinFork = 13;
 bool laatsteknopstatus = false;
@@ -43,6 +44,7 @@ void setup() {
   attachInterrupt(digitalPinToInterrupt(encxa), readEncoderx, RISING);
   attachInterrupt(digitalPinToInterrupt(encya), readEncodery, RISING);
   TCCR2B = TCCR2B & B11111000 | B00000111; // for PWM frequency of 30 Hz 
+  delay1 = millis();
   Wire.begin();
   Serial.begin(9600);
 }
@@ -50,13 +52,9 @@ void setup() {
 void loop() {
   buttonState = digitalRead(buttonPin);
   if (buttonState != lastButtonState && buttonState == LOW) {
-    buttonToggle = !buttonToggle; // Toggle the button state
-    if (buttonToggle) {
-      Serial.println("1");
-    } else {
-      Serial.println("0");
-      stuurbericht("stil");
-    }
+    analogWrite(pwrPinFork, 0);
+    stuurbericht("stil");
+    buttonToggle = !buttonToggle;
   }
   lastButtonState = buttonState;
 
@@ -91,11 +89,13 @@ void loop() {
 
 void eenmaalknopindrukken() {
   bool knop1 = digitalRead(joystickButton);
-  delay(10);
+  while ((millis() - delay1) > 10){
+    delay1 = millis();
   if (knop1 != laatsteknopstatus && knop1 == HIGH) {    // ensures that the button press signal is only sent once
     knopingedrukt();
   }
   laatsteknopstatus = knop1;
+  }
 }
 
 void knopingedrukt() {
@@ -160,12 +160,7 @@ void buttonToggleState() {
   bool buttonState = digitalRead(buttonPin);
   if (buttonState != lastButtonState && buttonState == LOW) {
     buttonToggle = !buttonToggle;
-    if (buttonToggle) {
-      Serial.println("1");
-    } else {
-      Serial.println("0");
-      stuurbericht("stil");
-    }
+    stuurbericht("stil");
   }
   lastButtonState = buttonState;
 }
