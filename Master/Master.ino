@@ -15,8 +15,6 @@ bool laatsteknopstatus = false;
 int heenEnWeer = 0;
 int posx = 0;
 int posy = 0;
-int coördinaatX = 1000;
-int coördinaatX = -1000;
 unsigned long previousMillis = 0;
 unsigned long positiedoorstuur = 0;
 const long interval = 1500; // interval at which to stop the motor (milliseconds)
@@ -187,18 +185,6 @@ void readEncoderx() {
     posx--;
   }
 }
-
-void beweegLocatie(){
-  while(posx < coördinaatX){
-    stuurbericht(right);
-  }
-    
-  while(posy > coördinaatY){
-    
-  }
-}
-
-
 
 void stuurbericht(String bericht) {
   Wire.beginTransmission(4);
