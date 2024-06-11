@@ -9,6 +9,7 @@
 #define buttonPin 4
 
 int joystickButton = 10;
+unsigned long delay1 = 0;
 int pwrPinFork = 11;
 int directionPinFork = 13;
 bool laatsteknopstatus = false;
@@ -43,6 +44,7 @@ void setup() {
   attachInterrupt(digitalPinToInterrupt(encxa), readEncoderx, RISING);
   attachInterrupt(digitalPinToInterrupt(encya), readEncodery, RISING);
   TCCR2B = TCCR2B & B11111000 | B00000111; // for PWM frequency of 30 Hz 
+  delay1 = millis();
   Wire.begin();
   Serial.begin(9600);
 }
@@ -50,8 +52,9 @@ void setup() {
 void loop() {
   buttonState = digitalRead(buttonPin);
   if (buttonState != lastButtonState && buttonState == LOW) {
-    buttonToggle = !buttonToggle; // Toggle the button state
+    analogWrite(pwrPinFork, 0);
     stuurbericht("stil");
+    buttonToggle = !buttonToggle;
   }
   lastButtonState = buttonState;
 
@@ -67,12 +70,12 @@ void loop() {
       HMIdoorstuur = Serial.readStringUntil('\n');
       if (HMIdoorstuur == "fork") {
         knopingedrukt();
+      } else if (HMIdoorstuur.startsWith("coordinates")) {
+        ontvangenCoordinates(HMIdoorstuur);
       } else {
-      if(HMIdoorstuur == "stil"){
-        buttonToggle = !buttonToggle;
-      }
         stuurbericht(HMIdoorstuur);
       }
+
     }
 
     while ((millis() - positiedoorstuur) > 250) {
@@ -89,11 +92,13 @@ void loop() {
 
 void eenmaalknopindrukken() {
   bool knop1 = digitalRead(joystickButton);
-  delay(10);
+  while ((millis() - delay1) > 10){
+    delay1 = millis();
   if (knop1 != laatsteknopstatus && knop1 == HIGH) {    // ensures that the button press signal is only sent once
     knopingedrukt();
   }
   laatsteknopstatus = knop1;
+  }
 }
 
 void knopingedrukt() {
@@ -158,12 +163,7 @@ void buttonToggleState() {
   bool buttonState = digitalRead(buttonPin);
   if (buttonState != lastButtonState && buttonState == LOW) {
     buttonToggle = !buttonToggle;
-    //stuurbericht("stil");
-    if (buttonToggle) {
-      Serial.println("1");
-    } else {
-      Serial.println("0");
-    }
+    stuurbericht("stil");
   }
   lastButtonState = buttonState;
 }
@@ -184,6 +184,17 @@ void readEncoderx() {
   } else {
     posx--;
   }
+}
+
+void ontvangenCoordinates(String input) {
+  int commaIndex1 = input.indexOf(',');
+  int commaIndex2 = input.indexOf(',', commaIndex1 + 1);
+  if (commaIndex1 != -1 && commaIndex2 != -1) {
+    int x = input.substring(commaIndex1 + 1, commaIndex2).toInt();
+    int y = input.substring(commaIndex2 + 1).toInt();
+    Serial.print("x: "); Serial.println(x);
+    Serial.print("y: "); Serial.println(y);
+  } 
 }
 
 void stuurbericht(String bericht) {
