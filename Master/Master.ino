@@ -15,6 +15,8 @@ bool laatsteknopstatus = false;
 int heenEnWeer = 0;
 int posx = 0;
 int posy = 0;
+int coördinaatX = 1000;
+int coördinaatX = -1000;
 unsigned long previousMillis = 0;
 unsigned long positiedoorstuur = 0;
 const long interval = 1500; // interval at which to stop the motor (milliseconds)
@@ -51,12 +53,7 @@ void loop() {
   buttonState = digitalRead(buttonPin);
   if (buttonState != lastButtonState && buttonState == LOW) {
     buttonToggle = !buttonToggle; // Toggle the button state
-    if (buttonToggle) {
-      Serial.println("1");
-    } else {
-      Serial.println("0");
-      stuurbericht("stil");
-    }
+    stuurbericht("stil");
   }
   lastButtonState = buttonState;
 
@@ -73,6 +70,9 @@ void loop() {
       if (HMIdoorstuur == "fork") {
         knopingedrukt();
       } else {
+      if(HMIdoorstuur == "stil"){
+        buttonToggle = !buttonToggle;
+      }
         stuurbericht(HMIdoorstuur);
       }
     }
@@ -160,11 +160,11 @@ void buttonToggleState() {
   bool buttonState = digitalRead(buttonPin);
   if (buttonState != lastButtonState && buttonState == LOW) {
     buttonToggle = !buttonToggle;
+    //stuurbericht("stil");
     if (buttonToggle) {
       Serial.println("1");
     } else {
       Serial.println("0");
-      stuurbericht("stil");
     }
   }
   lastButtonState = buttonState;
@@ -187,6 +187,18 @@ void readEncoderx() {
     posx--;
   }
 }
+
+void beweegLocatie(){
+  while(posx < coördinaatX){
+    stuurbericht(right);
+  }
+    
+  while(posy > coördinaatY){
+    
+  }
+}
+
+
 
 void stuurbericht(String bericht) {
   Wire.beginTransmission(4);

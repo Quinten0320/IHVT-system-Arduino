@@ -1,218 +1,217 @@
-#include <Wire.h>
+  #include <Wire.h>
 
-int directionPinX = 12;
-int powerPinX = 3;
-int directionPinY = 13;
-int powerPinY = 11;
-int forkButton = 10;
-#define VRX_PIN  A2
-#define VRY_PIN  A3
-#define MICRO_SWITCH_PIN_RIGHT 2
-#define MICRO_SWITCH_PIN_LEFT 4
-#define MICRO_SWITCH_PIN_UP 7
-#define MICRO_SWITCH_PIN_DOWN 10
-#define startpuntx 5
-#define startpunty 6
+  int directionPinX = 12;
+  int powerPinX = 3;
+  int directionPinY = 13;
+  int powerPinY = 11;
+  int forkButton = 10;
+  #define VRX_PIN  A2
+  #define VRY_PIN  A3
+  #define MICRO_SWITCH_PIN_RIGHT 2
+  #define MICRO_SWITCH_PIN_LEFT 4
+  #define MICRO_SWITCH_PIN_UP 7
+  #define MICRO_SWITCH_PIN_DOWN 10
+  #define startpuntx 5
+  #define startpunty 6
 
-int xValue = 0;
-int yValue = 0;
-bool buttonStateRight = false;
-bool buttonStateLeft = false;
-bool buttonStateUp = false;
-bool buttonStateDown = false;
-bool HMIBesturing = false;
-bool noodStop = true;
-String HMIstuur;
-String laatstestring = "";
+  int xValue = 0;
+  int yValue = 0;
+  bool buttonStateRight = false;
+  bool buttonStateLeft = false;
+  bool buttonStateUp = false;
+  bool buttonStateDown = false;
+  bool HMIBesturing = false;
+  bool noodStop = true;
+  String HMIstuur;
+  String laatstestring = "";
 
-void omhoog();
-void omlaag();
-void links();
-void rechts();
-void joyStick();
-void bewegen();
-void HMIBewegen();
-void receiveEvent(int howMany);
+  void omhoog();
+  void omlaag();
+  void links();
+  void rechts();
+  void joyStick();
+  void bewegen();
+  void HMIBewegen();
+  void noodStopFunctie();
+  void receiveEvent(int howMany);
 
-void setup() {
-  pinMode(directionPinX, OUTPUT);
-  pinMode(powerPinX, OUTPUT);
-  pinMode(powerPinY, OUTPUT);
-  pinMode(directionPinY, OUTPUT);
-  pinMode(startpuntx, OUTPUT);
-  pinMode(startpunty, OUTPUT);
-  pinMode(forkButton, INPUT_PULLUP);
-  pinMode(MICRO_SWITCH_PIN_RIGHT, INPUT_PULLUP);
-  pinMode(MICRO_SWITCH_PIN_LEFT, INPUT_PULLUP); 
-  pinMode(MICRO_SWITCH_PIN_UP, INPUT_PULLUP); 
-  pinMode(MICRO_SWITCH_PIN_DOWN, INPUT_PULLUP); 
-  Serial.begin(9600);
-  Wire.begin(4);
-  Wire.onReceive(receiveEvent);
+  void setup() {
+    pinMode(directionPinX, OUTPUT);
+    pinMode(powerPinX, OUTPUT);
+    pinMode(powerPinY, OUTPUT);
+    pinMode(directionPinY, OUTPUT);
+    pinMode(startpuntx, OUTPUT);
+    pinMode(startpunty, OUTPUT);
+    pinMode(forkButton, INPUT_PULLUP);
+    pinMode(MICRO_SWITCH_PIN_RIGHT, INPUT_PULLUP);
+    pinMode(MICRO_SWITCH_PIN_LEFT, INPUT_PULLUP); 
+    pinMode(MICRO_SWITCH_PIN_UP, INPUT_PULLUP); 
+    pinMode(MICRO_SWITCH_PIN_DOWN, INPUT_PULLUP); 
+    Serial.begin(9600);
+    Wire.begin(4);
+    Wire.onReceive(receiveEvent);
 
-  TCCR2B = TCCR2B & B11111000 | B00000111; // for PWM frequency of 30 Hz 
-}
-
-void loop() {
-  xValue = analogRead(VRX_PIN);
-  yValue = analogRead(VRY_PIN);
-  digitalWrite(startpuntx, LOW);
-  digitalWrite(startpunty, LOW);
-
-  buttonStateRight = !digitalRead(MICRO_SWITCH_PIN_RIGHT); 
-  buttonStateLeft = !digitalRead(MICRO_SWITCH_PIN_LEFT); 
-  buttonStateUp = !digitalRead(MICRO_SWITCH_PIN_UP); 
-  buttonStateDown = digitalRead(MICRO_SWITCH_PIN_DOWN);
-
-  if(!HMIBesturing){
-    joyStick();
+    TCCR2B = TCCR2B & B11111000 | B00000111; // for PWM frequency of 30 Hz 
   }
-  //bewegen();
-}
 
-void bewegen() {
-  if (HMIBesturing) {
-    HMIBewegen();
-  } else {
-    joyStick();
-  }
-}
+  void loop() {
+    xValue = analogRead(VRX_PIN);
+    yValue = analogRead(VRY_PIN);
+    digitalWrite(startpuntx, LOW);
+    digitalWrite(startpunty, LOW);
 
-void HMIBewegen(String kant) {
-  
-  if(kant == "left"){
-    HMIBesturing = true;
-    if(laatstestring == "left"){
-      analogWrite(powerPinX, 0);
-      laatstestring = "";
-    }else{
-      laatstestring = kant;
-      rechts();
+    buttonStateRight = !digitalRead(MICRO_SWITCH_PIN_RIGHT); 
+    buttonStateLeft = !digitalRead(MICRO_SWITCH_PIN_LEFT); 
+    buttonStateUp = !digitalRead(MICRO_SWITCH_PIN_UP); 
+    buttonStateDown = digitalRead(MICRO_SWITCH_PIN_DOWN);
+
+    if(!HMIBesturing){
+      joyStick();
     }
-  }else if(kant == "right"){
-    HMIBesturing = true;
-    if(laatstestring == "right"){
-      analogWrite(powerPinX, 0);
-      laatstestring = "";
-    }else{
-      laatstestring = kant;
+    //bewegen();
+  }
+
+  void bewegen() {
+    if (HMIBesturing) {
+      HMIBewegen();
+    } else {
+      joyStick();
+    }
+  }
+
+  void HMIBewegen(String kant) {
+    
+    if(kant == "left"){
+      HMIBesturing = true;
+      if(laatstestring == "left"){
+        analogWrite(powerPinX, 0);
+        laatstestring = "";
+      }else{
+        laatstestring = kant;
+        rechts();
+      }
+    }else if(kant == "right"){
+      HMIBesturing = true;
+      if(laatstestring == "right"){
+        analogWrite(powerPinX, 0);
+        laatstestring = "";
+      }else{
+        laatstestring = kant;
+        links();
+      }
+    }else if(kant == "up"){
+      HMIBesturing = true;
+      if(laatstestring == "up"){
+        analogWrite(powerPinY, 0);
+        laatstestring = "";
+      }else{
+        laatstestring = kant;
+        omhoog();
+      }
+    }else if(kant == "down"){
+      HMIBesturing = true;
+      if(laatstestring == "down"){
+        analogWrite(powerPinY, 0);
+        laatstestring = "";
+      }else{
+        laatstestring = kant;
+        omlaag();
+      }
+    }
+  }
+
+  void joyStick() {
+    xValue = analogRead(VRX_PIN);
+    yValue = analogRead(VRY_PIN);
+
+    if (xValue < 400) {
       links();
+    } else if (xValue > 600) {
+      rechts();
+    } else {
+      analogWrite(powerPinX, 0);
     }
-  }else if(kant == "up"){
-    HMIBesturing = true;
-    if(laatstestring == "up"){
-      analogWrite(powerPinY, 0);
-      laatstestring = "";
-    }else{
-      laatstestring = kant;
-      omhoog();
-    }
-  }else if(kant == "down"){
-    HMIBesturing = true;
-    if(laatstestring == "down"){
-      analogWrite(powerPinY, 0);
-      laatstestring = "";
-    }else{
-      laatstestring = kant;
+
+    if (yValue > 600) {
       omlaag();
+    } else if (yValue < 400) {
+      omhoog();
+    } else {
+      analogWrite(powerPinY, 0);
     }
   }
-}
 
-void joyStick() {
-  xValue = analogRead(VRX_PIN);
-  yValue = analogRead(VRY_PIN);
-
-  if (xValue < 400) {
-    links();
-  } else if (xValue > 600) {
-    rechts();
-  } else {
-    analogWrite(powerPinX, 0);
+  void receiveEvent(int howMany) {
+    String receivedString = "";
+    while (Wire.available()) {
+      char c = Wire.read();
+      receivedString += c;
+    }
+    if (receivedString == "stil") {
+      noodStopFunctie();
+    } else {
+      HMIBewegen(receivedString);
+    }
   }
 
-  if (yValue > 600) {
-    omlaag();
-  } else if (yValue < 400) {
-    omhoog();
-  } else {
-    analogWrite(powerPinY, 0);
-  }
-}
-
-void receiveEvent(int howMany) {
-  String receivedString = "";
-  while (Wire.available()) {
-    char c = Wire.read();
-    receivedString += c;
-  }
-  if (receivedString == "stil") {
-    Serial.println("niggaaa45678");
+  void noodStopFunctie(){
     if(!noodStop){
-      noodStop = true;
-    } else {
-      noodStop = false;
-    }
-  //   noodStop = !noodStop;  
-  //   Serial.println(noodStop);
-  } else {
-    HMIBewegen(receivedString);
-  }
-  // HMIstuur = receivedString;
-  // HMIBesturing = true;
-  
-
-}
-
-void rechts() {
-  if(!noodStop){
-    Serial.println("niggaaa2");
-    if (!buttonStateLeft) {
-      digitalWrite(directionPinX, LOW);
-      analogWrite(powerPinX, 255);
-    } else {
-      HMIBesturing = false;
-      digitalWrite(startpuntx, HIGH);
-      analogWrite(powerPinX, 0);
-    }
-  }else{
-    Serial.println("niggaaa");
-  }
-}
-
-void links() {
-  if(!noodStop){
-    if (!buttonStateRight) {
-      digitalWrite(directionPinX, HIGH);
-      analogWrite(powerPinX, 255);
-    } else {
-      HMIBesturing = false;
-      digitalWrite(directionPinX, HIGH);
-      analogWrite(powerPinX, 0);
+        noodStop = true;
+        analogWrite(powerPinX, 0);
+        analogWrite(powerPinY, 0);
+      } else {
+        noodStop = false;
+        analogWrite(powerPinX, 255);
+        analogWrite(powerPinY, 255);
     }
   }
-}
 
-void omhoog() {
-  if(!noodStop){
-    if (!buttonStateUp) {
-      digitalWrite(directionPinY, LOW);
-      analogWrite(powerPinY, 255);
-    } else {
-      HMIBesturing = false;
-      analogWrite(powerPinY, 0);
+  void rechts() {
+    if(!noodStop){
+      if (!buttonStateLeft) {
+        digitalWrite(directionPinX, LOW);
+        analogWrite(powerPinX, 255);
+      } else {
+        HMIBesturing = false;
+        digitalWrite(startpuntx, HIGH);
+        analogWrite(powerPinX, 0);
+      }
     }
   }
-}
 
-void omlaag() {
-  if(!noodStop){
-    if (!buttonStateDown) {
-      digitalWrite(directionPinY, HIGH);
-      analogWrite(powerPinY, 255);
-    } else {
-      HMIBesturing = false;
-      analogWrite(powerPinY, 0);
+  void links() {
+    if(!noodStop){
+      if (!buttonStateRight) {
+        digitalWrite(directionPinX, HIGH);
+        analogWrite(powerPinX, 255);
+      } else {
+        HMIBesturing = false;
+        digitalWrite(directionPinX, HIGH);
+        analogWrite(powerPinX, 0);
+      }
     }
   }
-}
+
+  void omhoog() {
+    if(!noodStop){
+      if (!buttonStateUp) {
+        digitalWrite(directionPinY, LOW);
+        analogWrite(powerPinY, 255);
+      } else {
+        HMIBesturing = false;
+        analogWrite(powerPinY, 0);
+      }
+    }
+  }
+
+  void omlaag() {
+    if(!noodStop){
+      if (!buttonStateDown) {
+        digitalWrite(directionPinY, HIGH);
+        analogWrite(powerPinY, 255);
+      } else {
+        HMIBesturing = false;
+        analogWrite(powerPinY, 0);
+      }
+    }
+  }
