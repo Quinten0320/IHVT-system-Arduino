@@ -4,7 +4,7 @@
 #define encxb 5
 #define encya 3
 #define encyb 6
-#define startpuntx 8
+#define startpuntx 12
 #define startpunty 7
 #define buttonPin 4
 
@@ -29,9 +29,14 @@ bool motorDirection = LOW; // false for LOW, true for HIGH
 bool buttonState = false;
 bool lastButtonState = false;
 bool buttonToggle = false;
-// bool locatieBesturen = false;
-// bool rechts = false;
-// bool boven = false;
+bool locatieBesturen = false;
+bool rechts = false;
+bool links = false;
+bool omhoog = false;
+bool omlaag = false;
+bool yOpvangen = false;
+bool veranderBesturing = false;
+
 String HMIdoorstuur;
 
 void setup() {
@@ -87,9 +92,9 @@ void loop() {
       }
     }
     
-    // if(locatieBesturen == true){
-    //   naarLocatie();
-    // }
+    if(locatieBesturen == true){
+      naarLocatie();
+    }
 
     
       // if((posx > (targetx - tolerancex)) && (posx < (targetx + tolerancex))){
@@ -214,66 +219,70 @@ void ontvangenCoordinates(String input) {
   if (commaIndex1 != -1 && commaIndex2 != -1) {
     int x = input.substring(commaIndex1 + 1, commaIndex2).toInt();
     int y = input.substring(commaIndex2 + 1).toInt();
-    Serial.print("x: "); Serial.println(x);
-    Serial.print("y: "); Serial.println(y);
-  //   gaNaarLocatieStart(x,y);
-  // } 
+    gaNaarLocatieStart(x,y);
+    } 
+  }
+
+void gaNaarLocatieStart(int target_x, int target_y) {
+      targetx = target_x;
+      targety = target_y;
+      locatieBesturen = true;
+
+      if(targetx > posx){
+        rechts = true;
+        for (int i = 0; i < 3; i++) {
+        stuurbericht("right"); 
+        }
+      } else if(targetx < posx){
+        links = true;
+        for (int i = 0; i < 3; i++) {
+        stuurbericht("left");   
+        }
+      }
+}
+
+void naarLocatie() {
+  if ((posx > (targetx - 10)) && (posx < (targetx + 10)) && (rechts == true)) {
+    stuurbericht("right");
+    rechts = false;
+    veranderBesturing = true;
+  } else if ((posx > (targetx - 10)) && (posx < (targetx + 10)) && (links == true)) {
+    stuurbericht("left");
+    links = false;
+    veranderBesturing = true;
+  }
+ 
+  if(veranderBesturing){
+    veranderBesturing = false;
+    if(!omhoog || !omlaag){
+      if(targety > posy){
+        omhoog = true;
+        yOpvangen = true;
+        stuurbericht("up");
+      } else if(targety < posy){
+        omlaag = true;
+        yOpvangen = true;
+        stuurbericht("down");
+      }
+    }
+  }
+
+  if(yOpvangen){
+    if ((posy > (targety - 20)) && (posy < (targety + 20)) && (omhoog == true)) {
+      stuurbericht("up");
+      omhoog = false;
+      yOpvangen = false;
+      locatieBesturen = false;
+
+    } else if ((posy > (targety - 50)) && (posy < (targety + 50)) && (omlaag == true)) {
+      stuurbericht("down");
+      omlaag = false;
+      yOpvangen = false;
+      locatieBesturen = false;
+
+    }
   }
 }
-// void gaNaarLocatieStart(int target_x, int target_y) {
-//       tolerancex = target_x * 0.05;
-//       tolerancey = target_y * 0.05;
-//       targetx = target_x;
-//       targety = target_y;
-//       Serial.println(tolerancex);
-//       Serial.println(tolerancey);
-
-//       stuurbericht("right");
-//       // stuurbericht("up");
-//       locatieBesturen = true;
-//       rechts = true;
-//       boven = true;
-// }
-
-// void naarLocatie(){
-//   if((posx > (targetx - tolerancex)) && (posx < (targetx + tolerancex)) && (rechts == true)){
-//         stuurbericht("right");
-//         rechts = false;
-//       }
-  // else if((posx > (targety - tolerancey)) && (posx < (targety + tolerancey)) && (boven == true)){
-  //       stuurbericht("up");
-  //       boven = false;
-  //     }
-  // }
-      
-
-//       // if((posx > (target_x - tolerance)) && (posx < (target_x + tolerance))){
-//       //   stuurbericht("right");
-//       //   while(1 == 1){
-//       //     Serial.print("test");
-//       //   }
-//       // }
-//     // while (posx != target_x) {
-//     //     if (posx < target_x) {
-//     //         // Move right
-//     //         Serial.println("right");
-//     //         stuurbericht("right");
-            
-//     //          Serial.println(Coordinaten);
-//     //     } else if (posx > target_x) {
-//     //         // Move left
-//     //         Serial.println("left");
-//     //     }
-        
-//         // if (posy < target_y) {
-//         //     // Move down
-//         //     move_down();
-//         // } else if (posy > target_y) {
-//         //     // Move up
-//         //     move_up();
-//         // }
-//     }
-
 
 void stuurbericht(String bericht) {
   Wire.beginTransmission(4);
