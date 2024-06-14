@@ -4,7 +4,7 @@
 #define encxb 5
 #define encya 3
 #define encyb 6
-#define startpuntx 8
+#define startpuntx 12
 #define startpunty 7
 #define buttonPin 4
 

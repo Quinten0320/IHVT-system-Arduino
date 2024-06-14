@@ -11,7 +11,7 @@
   #define MICRO_SWITCH_PIN_LEFT 4
   #define MICRO_SWITCH_PIN_UP 7
   #define MICRO_SWITCH_PIN_DOWN 10
-  #define startpuntx 5
+  #define startpuntx 8
   #define startpunty 6
 
   int xValue = 0;
@@ -25,10 +25,15 @@
   String HMIstuur;
   String laatstestring = "";
 
+
   void omhoog();
   void omlaag();
   void links();
   void rechts();
+  void HMIomhoog();
+  void HMIomlaag();
+  void HMIlinks();
+  void HMIrechts();
   void joyStick();
   void bewegen();
   void HMIBewegen();
@@ -65,6 +70,13 @@
     buttonStateUp = !digitalRead(MICRO_SWITCH_PIN_UP); 
     buttonStateDown = digitalRead(MICRO_SWITCH_PIN_DOWN);
 
+    if(buttonStateLeft){
+      digitalWrite(startpuntx, HIGH);
+    }
+    if(buttonStateDown){
+      digitalWrite(startpunty, HIGH);
+    }
+
     if(!HMIBesturing){
       joyStick();
     }
@@ -82,41 +94,13 @@
   void HMIBewegen(String kant) {
     
     if(kant == "left"){
-      HMIBesturing = true;
-      if(laatstestring == "left"){
-        analogWrite(powerPinX, 0);
-        laatstestring = "";
-      }else{
-        laatstestring = kant;
-        rechts();
-      }
+      HMIlinks();
     }else if(kant == "right"){
-      HMIBesturing = true;
-      if(laatstestring == "right"){
-        analogWrite(powerPinX, 0);
-        laatstestring = "";
-      }else{
-        laatstestring = kant;
-        links();
-      }
+      HMIrechts();
     }else if(kant == "up"){
-      HMIBesturing = true;
-      if(laatstestring == "up"){
-        analogWrite(powerPinY, 0);
-        laatstestring = "";
-      }else{
-        laatstestring = kant;
-        omhoog();
-      }
+      HMIomhoog();
     }else if(kant == "down"){
-      HMIBesturing = true;
-      if(laatstestring == "down"){
-        analogWrite(powerPinY, 0);
-        laatstestring = "";
-      }else{
-        laatstestring = kant;
-        omlaag();
-      }
+      HMIomlaag();
     }
   }
 
@@ -172,8 +156,6 @@
         digitalWrite(directionPinX, LOW);
         analogWrite(powerPinX, 255);
       } else {
-        HMIBesturing = false;
-        digitalWrite(startpuntx, HIGH);
         analogWrite(powerPinX, 0);
       }
     }
@@ -185,8 +167,6 @@
         digitalWrite(directionPinX, HIGH);
         analogWrite(powerPinX, 255);
       } else {
-        HMIBesturing = false;
-        digitalWrite(directionPinX, HIGH);
         analogWrite(powerPinX, 0);
       }
     }
@@ -198,7 +178,6 @@
         digitalWrite(directionPinY, LOW);
         analogWrite(powerPinY, 255);
       } else {
-        HMIBesturing = false;
         analogWrite(powerPinY, 0);
       }
     }
@@ -209,6 +188,85 @@
       if (!buttonStateDown) {
         digitalWrite(directionPinY, HIGH);
         analogWrite(powerPinY, 255);
+      } else {
+        analogWrite(powerPinY, 0);
+      }
+    }
+  }
+
+  void HMIrechts() {
+    if(!noodStop){
+      if (!buttonStateLeft) {
+        if(laatstestring == "right"){
+          analogWrite(powerPinX, 0);
+          HMIBesturing = false;
+          laatstestring = " ";
+        }else{
+          digitalWrite(directionPinX, HIGH);
+          analogWrite(powerPinX, 255);
+          laatstestring = "right";
+          HMIBesturing = true;
+        }
+      } else {
+        HMIBesturing = false;
+        analogWrite(powerPinX, 0);
+      }
+    }
+  }
+
+  void HMIlinks() {
+    if(!noodStop){
+      if (!buttonStateRight) {
+        if(laatstestring == "left"){
+          analogWrite(powerPinX, 0);
+          HMIBesturing = false;
+          laatstestring = " ";
+        }else{
+          digitalWrite(directionPinX, LOW);
+          analogWrite(powerPinX, 255);
+          laatstestring = "left";
+          HMIBesturing = true;
+        }
+      } else {
+        HMIBesturing = false;
+        analogWrite(powerPinX, 0);
+      }
+    }
+  }
+
+  void HMIomhoog() {
+    if(!noodStop){
+      if (!buttonStateUp) {
+        if(laatstestring == "up"){
+          analogWrite(powerPinY, 0);
+          HMIBesturing = false;
+          laatstestring = " ";
+        }else{
+          digitalWrite(directionPinY, LOW);
+          analogWrite(powerPinY, 255);
+          laatstestring = "up";
+          HMIBesturing = true;
+        }
+      } else {
+        HMIBesturing = false;
+        analogWrite(powerPinY, 0);
+      }
+    }
+  }
+
+  void HMIomlaag() {
+    if(!noodStop){
+      if (!buttonStateDown) {
+        if(laatstestring == "down"){
+          analogWrite(powerPinY, 0);
+          HMIBesturing = false;
+          laatstestring = " ";
+        }else{
+          digitalWrite(directionPinY, HIGH);
+          analogWrite(powerPinY, 255);
+          laatstestring = "down";
+          HMIBesturing = true;
+        }
       } else {
         HMIBesturing = false;
         analogWrite(powerPinY, 0);
