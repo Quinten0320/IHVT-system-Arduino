@@ -4,7 +4,6 @@
   int powerPinX = 3;
   int directionPinY = 13;
   int powerPinY = 11;
-  int forkButton = 10;
   #define VRX_PIN  A2
   #define VRY_PIN  A3
   #define MICRO_SWITCH_PIN_RIGHT 2
@@ -47,7 +46,6 @@
     pinMode(directionPinY, OUTPUT);
     pinMode(startpuntx, OUTPUT);
     pinMode(startpunty, OUTPUT);
-    pinMode(forkButton, INPUT_PULLUP);
     pinMode(MICRO_SWITCH_PIN_RIGHT, INPUT_PULLUP);
     pinMode(MICRO_SWITCH_PIN_LEFT, INPUT_PULLUP); 
     pinMode(MICRO_SWITCH_PIN_UP, INPUT_PULLUP); 
