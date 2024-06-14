@@ -16,6 +16,11 @@ bool laatsteknopstatus = false;
 int heenEnWeer = 0;
 int posx = 0;
 int posy = 0;
+int targetx = 999999999;
+int targety = 999999999;
+int tolerancex = 0;
+int tolerancey = 0;
+
 unsigned long previousMillis = 0;
 unsigned long positiedoorstuur = 0;
 const long interval = 1500; // interval at which to stop the motor (milliseconds)
@@ -24,6 +29,9 @@ bool motorDirection = LOW; // false for LOW, true for HIGH
 bool buttonState = false;
 bool lastButtonState = false;
 bool buttonToggle = false;
+// bool locatieBesturen = false;
+// bool rechts = false;
+// bool boven = false;
 String HMIdoorstuur;
 
 void setup() {
@@ -70,19 +78,33 @@ void loop() {
       HMIdoorstuur = Serial.readStringUntil('\n');
       if (HMIdoorstuur == "fork") {
         knopingedrukt();
-      } else if (HMIdoorstuur.startsWith("coordinates")) {
+      } 
+      else if (HMIdoorstuur.startsWith("coordinaten")) {
         ontvangenCoordinates(HMIdoorstuur);
-      } else {
+      } 
+      else {
         stuurbericht(HMIdoorstuur);
       }
-
     }
+    
+    // if(locatieBesturen == true){
+    //   naarLocatie();
+    // }
 
-    while ((millis() - positiedoorstuur) > 250) {
+    
+      // if((posx > (targetx - tolerancex)) && (posx < (targetx + tolerancex))){
+      //   stuurbericht("right");
+      // }
+      //   if((posx > (targety - tolerancey)) && (posx < (targety + tolerancey))){
+      //   stuurbericht("up");
+      // }
+
+
+    //while ((millis() - positiedoorstuur) > 250) {
       String Coordinaten = "COORD," + String(posx) + "," + String(posy);
       Serial.println(Coordinaten);
       positiedoorstuur = millis();
-    }
+    //}
 
     eenmaalknopindrukken();
     checkMotor();
@@ -171,9 +193,9 @@ void buttonToggleState() {
 void readEncodery() {
   int c = digitalRead(encyb);
   if (c > 0) {
-    posy++;
-  } else {
     posy--;
+  } else {
+    posy++;
   }
 }
 
@@ -194,8 +216,64 @@ void ontvangenCoordinates(String input) {
     int y = input.substring(commaIndex2 + 1).toInt();
     Serial.print("x: "); Serial.println(x);
     Serial.print("y: "); Serial.println(y);
-  } 
+  //   gaNaarLocatieStart(x,y);
+  // } 
+  }
 }
+// void gaNaarLocatieStart(int target_x, int target_y) {
+//       tolerancex = target_x * 0.05;
+//       tolerancey = target_y * 0.05;
+//       targetx = target_x;
+//       targety = target_y;
+//       Serial.println(tolerancex);
+//       Serial.println(tolerancey);
+
+//       stuurbericht("right");
+//       // stuurbericht("up");
+//       locatieBesturen = true;
+//       rechts = true;
+//       boven = true;
+// }
+
+// void naarLocatie(){
+//   if((posx > (targetx - tolerancex)) && (posx < (targetx + tolerancex)) && (rechts == true)){
+//         stuurbericht("right");
+//         rechts = false;
+//       }
+  // else if((posx > (targety - tolerancey)) && (posx < (targety + tolerancey)) && (boven == true)){
+  //       stuurbericht("up");
+  //       boven = false;
+  //     }
+  // }
+      
+
+//       // if((posx > (target_x - tolerance)) && (posx < (target_x + tolerance))){
+//       //   stuurbericht("right");
+//       //   while(1 == 1){
+//       //     Serial.print("test");
+//       //   }
+//       // }
+//     // while (posx != target_x) {
+//     //     if (posx < target_x) {
+//     //         // Move right
+//     //         Serial.println("right");
+//     //         stuurbericht("right");
+            
+//     //          Serial.println(Coordinaten);
+//     //     } else if (posx > target_x) {
+//     //         // Move left
+//     //         Serial.println("left");
+//     //     }
+        
+//         // if (posy < target_y) {
+//         //     // Move down
+//         //     move_down();
+//         // } else if (posy > target_y) {
+//         //     // Move up
+//         //     move_up();
+//         // }
+//     }
+
 
 void stuurbericht(String bericht) {
   Wire.beginTransmission(4);

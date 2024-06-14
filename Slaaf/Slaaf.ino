@@ -211,6 +211,7 @@
         analogWrite(powerPinY, 255);
       } else {
         HMIBesturing = false;
+        digitalWrite(startpunty, HIGH);
         analogWrite(powerPinY, 0);
       }
     }
