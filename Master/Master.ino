@@ -238,6 +238,8 @@ void gaNaarLocatieStart(int target_x, int target_y) {
         for (int i = 0; i < 3; i++) {
         stuurbericht("left");   
         }
+      } else if(targetx == posx){
+        veranderBesturing = true;
       }
 }
 
@@ -274,8 +276,11 @@ void naarLocatie() {
       yOpvangen = false;
       locatieBesturen = false;
 
-    } else if ((posy > (targety - 50)) && (posy < (targety + 50)) && (omlaag == true)) {
+    } else if ((posy > (targety - 20)) && (posy < (targety + 20)) && (omlaag == true)) {
       stuurbericht("down");
+      stuurbericht("up");
+      delay(20);
+      stuurbericht("up");
       omlaag = false;
       yOpvangen = false;
       locatieBesturen = false;
