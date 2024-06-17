@@ -84,6 +84,7 @@
       if(laatstestring == "left"){
         analogWrite(powerPinX, 0);
         laatstestring = "";
+        
       }else{
         laatstestring = kant;
         rechts();
@@ -102,6 +103,7 @@
       if(laatstestring == "up"){
         analogWrite(powerPinY, 0);
         laatstestring = "";
+        HMIBesturing = false;
       }else{
         laatstestring = kant;
         omhoog();

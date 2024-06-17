@@ -20,6 +20,7 @@ int targetx = 999999999;
 int targety = 999999999;
 int tolerancex = 0;
 int tolerancey = 0;
+int timer1;
 
 unsigned long previousMillis = 0;
 unsigned long positiedoorstuur = 0;
@@ -58,6 +59,9 @@ void setup() {
   attachInterrupt(digitalPinToInterrupt(encya), readEncodery, RISING);
   TCCR2B = TCCR2B & B11111000 | B00000111; // for PWM frequency of 30 Hz 
   delay1 = millis();
+  timer1 = millis();
+  delay(100);
+
   Wire.begin();
   Serial.begin(9600);
 }
@@ -112,7 +116,6 @@ void loop() {
     //}
 
     eenmaalknopindrukken();
-    checkMotor();
     falloverstate(); // Check if the fork is in the "fall over" state
   }
 }
@@ -129,46 +132,30 @@ void eenmaalknopindrukken() {
 }
 
 void knopingedrukt() {
-  heenEnWeer++;
-  if (heenEnWeer == 1) {
-    moveForward();
-  } else if (heenEnWeer == 2) {
-    moveBackward();
-    heenEnWeer = 0;
-  }
+  moveForward();
+  stuurbericht("up");
+  delay(300);
+  stuurbericht("up");
+  moveBackward();
 }
 
 void moveForward() {
   motorDirection = LOW;
   startMotor();
+  delay(1500);
 }
 
 void moveBackward() {
   motorDirection = HIGH;
   startMotor();
+  delay(1500);
+  analogWrite(pwrPinFork, 0);
 }
 
 void startMotor() {
   digitalWrite(directionPinFork, motorDirection);
   analogWrite(pwrPinFork, 255);
   previousMillis = millis();
-  motorRunning = true;
-}
-
-void checkMotor() {
-  if (motorRunning) {
-    if (digitalRead(A3) == LOW) {
-      // Microswitch is pressed, continue motor operation
-      if (millis() - previousMillis >= interval) {
-        analogWrite(pwrPinFork, 0);
-        motorRunning = false;
-      }
-    } else {
-      // Microswitch is not pressed, stop the motor immediately
-      analogWrite(pwrPinFork, 0);
-      motorRunning = false;
-    }
-  }
 }
 
 void falloverstate() {
