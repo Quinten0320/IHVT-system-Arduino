@@ -1,11 +1,12 @@
 #include <Wire.h>
 
-#define encxa 2
+#define encxa 3
 #define encxb 5
-#define encya 3
+#define encya 2
 #define encyb 6
 #define startpuntx 12
 #define startpunty 7
+#define afgeefpunt 9
 #define buttonPin 4
 
 int joystickButton = 10;
@@ -37,13 +38,18 @@ bool omhoog = false;
 bool omlaag = false;
 bool yOpvangen = false;
 bool veranderBesturing = false;
+bool opstart = true;
+bool eenkeer = true;
 
 String HMIdoorstuur;
+
+void stuurbericht(String bericht);
 
 void setup() {
   positiedoorstuur = millis();
   pinMode(startpuntx, INPUT);
   pinMode(startpunty, INPUT);
+  pinMode(afgeefpunt, INPUT);
   pinMode(encxa, INPUT);
   pinMode(encxb, INPUT);
   pinMode(encya, INPUT);
@@ -60,13 +66,21 @@ void setup() {
   TCCR2B = TCCR2B & B11111000 | B00000111; // for PWM frequency of 30 Hz 
   delay1 = millis();
   timer1 = millis();
-  delay(100);
 
   Wire.begin();
   Serial.begin(9600);
 }
 
+void opstarten(){
+  stuurbericht("opstarten");
+  if(startpuntx && startpunty){
+    opstart = false;
+  }    
+}
+
 void loop() {
+
+
   buttonState = digitalRead(buttonPin);
   if (buttonState != lastButtonState && buttonState == LOW) {
     analogWrite(pwrPinFork, 0);
@@ -76,6 +90,11 @@ void loop() {
   lastButtonState = buttonState;
 
   if (buttonToggle) {
+  if(eenkeer){
+    opstarten();
+    eenkeer = false;
+  }
+  if(!opstart){
     if (digitalRead(startpuntx)) {
       posx = 0;
     }
@@ -90,7 +109,10 @@ void loop() {
       } 
       else if (HMIdoorstuur.startsWith("coordinaten")) {
         ontvangenCoordinates(HMIdoorstuur);
-      } 
+      } else if(HMIdoorstuur == "kalibreer"){
+        opstart = true;
+        eenkeer = true;
+      }
       else {
         stuurbericht(HMIdoorstuur);
       }
@@ -110,13 +132,12 @@ void loop() {
 
 
     //while ((millis() - positiedoorstuur) > 250) {
-      String Coordinaten = "COORD," + String(posx) + "," + String(posy);
-      Serial.println(Coordinaten);
-      positiedoorstuur = millis();
+    printlocatie();
     //}
 
     eenmaalknopindrukken();
     falloverstate(); // Check if the fork is in the "fall over" state
+  }
   }
 }
 
@@ -124,7 +145,7 @@ void eenmaalknopindrukken() {
   bool knop1 = digitalRead(joystickButton);
   while ((millis() - delay1) > 10){
     delay1 = millis();
-  if (knop1 != laatsteknopstatus && knop1 == HIGH) {    // ensures that the button press signal is only sent once
+  if (knop1 != laatsteknopstatus && knop1 == LOW) {    // ensures that the button press signal is only sent once
     knopingedrukt();
   }
   laatsteknopstatus = knop1;
@@ -132,30 +153,59 @@ void eenmaalknopindrukken() {
 }
 
 void knopingedrukt() {
+  unsigned long millisfork = millis();
+  Serial.println("fork");
   moveForward();
+  while((millis() - millisfork) < 1500){
+    printlocatie();
+  }
+  millisfork = millis();
   stuurbericht("up");
-  delay(300);
+  while((millis() - millisfork) < 300){
+    printlocatie();
+  }
+  millisfork = millis();
   stuurbericht("up");
   moveBackward();
+  while((millis() - millisfork) < 1500){
+    printlocatie();
+  }
+  analogWrite(pwrPinFork, 0);
+  Serial.println("bewegen");
+  pakketjedrop();
 }
 
 void moveForward() {
   motorDirection = LOW;
   startMotor();
-  delay(1500);
 }
 
 void moveBackward() {
   motorDirection = HIGH;
   startMotor();
-  delay(1500);
-  analogWrite(pwrPinFork, 0);
 }
 
 void startMotor() {
   digitalWrite(directionPinFork, motorDirection);
   analogWrite(pwrPinFork, 255);
   previousMillis = millis();
+  motorRunning = true;
+}
+
+void checkMotor() {
+  if (motorRunning) {
+    if (digitalRead(A3) == LOW) {
+      // Microswitch is pressed, continue motor operation
+      if (millis() - previousMillis >= interval) {
+        analogWrite(pwrPinFork, 0);
+        motorRunning = false;
+      }
+    } else {
+      // Microswitch is not pressed, stop the motor immediately
+      analogWrite(pwrPinFork, 0);
+      motorRunning = false;
+    }
+  }
 }
 
 void falloverstate() {
@@ -262,6 +312,7 @@ void naarLocatie() {
       omhoog = false;
       yOpvangen = false;
       locatieBesturen = false;
+      knopingedrukt();
 
     } else if ((posy > (targety - 20)) && (posy < (targety + 20)) && (omlaag == true)) {
       stuurbericht("down");
@@ -271,9 +322,32 @@ void naarLocatie() {
       omlaag = false;
       yOpvangen = false;
       locatieBesturen = false;
+      knopingedrukt();
 
     }
   }
+}
+void printlocatie(){
+  String Coordinaten = "COORD," + String(posx) + "," + String(posy);
+  Serial.println(Coordinaten);
+  positiedoorstuur = millis();
+
+}
+void pakketjedrop(){
+  stuurbericht("right");
+  bool afgeven = digitalRead(afgeefpunt);
+  while(!afgeven){
+    printlocatie();
+    afgeven = digitalRead(afgeefpunt);
+  }
+  stuurbericht("right");
+  stuurbericht("down");
+  afgeven = digitalRead(startpunty);
+  while(!afgeven){
+    printlocatie();
+    afgeven = digitalRead(startpunty);
+  }
+  stuurbericht("down");
 }
 
 void stuurbericht(String bericht) {

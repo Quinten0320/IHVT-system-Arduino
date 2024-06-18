@@ -12,6 +12,7 @@
   #define MICRO_SWITCH_PIN_DOWN 10
   #define startpuntx 8
   #define startpunty 6
+  #define afgeefpunt 5
 
   int xValue = 0;
   int yValue = 0;
@@ -21,6 +22,7 @@
   bool buttonStateDown = false;
   bool HMIBesturing = false;
   bool noodStop = true;
+  bool opstarten = false;
   String HMIstuur;
   String laatstestring = "";
 
@@ -28,13 +30,16 @@
   void omlaag();
   void links();
   void rechts();
+  void stop();
   void joyStick();
   void bewegen();
   void HMIBewegen();
   void noodStopFunctie();
+  void opstartenfunctie();
   void receiveEvent(int howMany);
 
   void setup() {
+    pinMode(afgeefpunt, OUTPUT);
     pinMode(directionPinX, OUTPUT);
     pinMode(powerPinX, OUTPUT);
     pinMode(powerPinY, OUTPUT);
@@ -53,29 +58,45 @@
   }
 
   void loop() {
+    if(opstarten == true){
+      
+    
+    
     xValue = analogRead(VRX_PIN);
     yValue = analogRead(VRY_PIN);
     digitalWrite(startpuntx, LOW);
     digitalWrite(startpunty, LOW);
+    digitalWrite(afgeefpunt, LOW);
 
     buttonStateRight = !digitalRead(MICRO_SWITCH_PIN_RIGHT); 
     buttonStateLeft = !digitalRead(MICRO_SWITCH_PIN_LEFT); 
     buttonStateUp = !digitalRead(MICRO_SWITCH_PIN_UP); 
     buttonStateDown = digitalRead(MICRO_SWITCH_PIN_DOWN);
 
+    if(buttonStateLeft){
+      digitalWrite(startpuntx, HIGH);
+    }
+    if(buttonStateDown){
+      digitalWrite(startpunty, HIGH);
+    }
+    if(buttonStateRight){
+      digitalWrite(afgeefpunt, HIGH);
+    }
+
     if(!HMIBesturing){
       joyStick();
     }
     //bewegen();
-  }
-
-  void bewegen() {
-    if (HMIBesturing) {
-      HMIBewegen();
-    } else {
-      joyStick();
     }
   }
+
+  // void bewegen() {
+  //   if (HMIBesturing) {
+  //     HMIBewegen();
+  //   } else {
+  //     joyStick();
+  //   }
+  // }
 
   void HMIBewegen(String kant) {
     
@@ -103,7 +124,7 @@
       if(laatstestring == "up"){
         analogWrite(powerPinY, 0);
         laatstestring = "";
-        HMIBesturing = false;
+        //HMIBesturing = false;
       }else{
         laatstestring = kant;
         omhoog();
@@ -113,6 +134,7 @@
       if(laatstestring == "down"){
         analogWrite(powerPinY, 0);
         laatstestring = "";
+        HMIBesturing = false;
       }else{
         laatstestring = kant;
         omlaag();
@@ -149,9 +171,32 @@
     }
     if (receivedString == "stil") {
       noodStopFunctie();
-    } else {
+    }else if(receivedString == "opstarten"){
+      opstarten = false;
+      opstartenfunctie();
+    }else {
       HMIBewegen(receivedString);
     }
+  }
+
+  void opstartenfunctie(){
+    buttonStateRight = !digitalRead(MICRO_SWITCH_PIN_RIGHT); 
+    buttonStateLeft = !digitalRead(MICRO_SWITCH_PIN_LEFT); 
+    buttonStateUp = !digitalRead(MICRO_SWITCH_PIN_UP); 
+    buttonStateDown = digitalRead(MICRO_SWITCH_PIN_DOWN);
+
+    omlaag();
+    while(!buttonStateDown){
+      buttonStateDown = digitalRead(MICRO_SWITCH_PIN_DOWN);
+    }
+    stop();
+    rechts();
+    while(!buttonStateLeft){
+      buttonStateLeft = !digitalRead(MICRO_SWITCH_PIN_LEFT); 
+
+    }
+    stop();
+    opstarten = true;
   }
 
   void noodStopFunctie(){
@@ -161,9 +206,12 @@
         analogWrite(powerPinY, 0);
       } else {
         noodStop = false;
-        analogWrite(powerPinX, 255);
-        analogWrite(powerPinY, 255);
     }
+  }
+  
+  void stop(){
+    analogWrite(powerPinX, 0);
+    analogWrite(powerPinY, 0);
   }
 
   void rechts() {
